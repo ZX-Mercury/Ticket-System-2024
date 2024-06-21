@@ -3,7 +3,7 @@ project(Ticket_System_2024)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(Ticket_System_2024
+add_executable(code
         testcases/.gitignore
         testcases/README.txt
         code.cpp)
