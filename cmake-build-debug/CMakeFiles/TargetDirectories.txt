@@ -1,0 +1,3 @@
+/mnt/d/Ticket-System-2024/cmake-build-debug/CMakeFiles/Ticket_System_2024.dir
+/mnt/d/Ticket-System-2024/cmake-build-debug/CMakeFiles/edit_cache.dir
+/mnt/d/Ticket-System-2024/cmake-build-debug/CMakeFiles/rebuild_cache.dir

@@ -71,13 +71,14 @@ int stod(const char str[25]) {//将mm-dd转为一个整数
     return date;
 }
 
-bool add_user(user tmp) {
+
+bool add_user(user tmp) {   //若成功添加返回true
     if (!user_db.query(tmp.username).empty()) return false;
     user_db.insert(tmp.username, tmp);
     return true;
 }
 
-bool check_add(char cur_username[25], int privilege) {
+bool check_add(char cur_username[25], int privilege) {//有权限添加用户返回true
     std::vector<user> t = user_db.query(cur_username);
     if (t.empty()) return false;
     if (t.size() != 1) throw ("Duplicate username");
@@ -101,6 +102,10 @@ bool logout(char cur_username[25]) {
     return true;
 }
 
+void print_user(user t) {
+    std::cout << t.username << ' ' << t.name << ' ' << t.mailAddr << ' ' << t.privilege << std::endl;
+}
+
 void query_profile(char cur_username[25], char username[35]) {
     if (online_users.find(cur_username) == online_users.end()) {//用户未登录
         std::cout << "-1" << std::endl;
@@ -112,31 +117,41 @@ void query_profile(char cur_username[25], char username[35]) {
         return;
     }
     user t = tv[0];
-    if (user_db.query(cur_username)[0].privilege <= user_db.query(username)[0].privilege
-        || strcmp(cur_username, username) != 0) {//权限不足或不是自己
+    if (strcmp(cur_username, username) != 0 &&
+        user_db.query(cur_username)[0].privilege <= user_db.query(username)[0].privilege
+            ) {//权限不足，也不是自己
         std::cout << "-1" << std::endl;
         return;
     }
-    std::cout << t.username << ' ' << t.name << ' ' << t.mailAddr << ' ' << t.privilege << std::endl;
+    print_user(t);
 }
+
 //-c 已登录，且「-c 的权限大于 -u 的权限，或是 -c 和 -u 相同」，且 -g 需低于 -c 的权限。
 bool check_modify_profile(char cur_username[25], char new_username[25], int new_privilege = -1) {
     if (online_users.find(cur_username) == online_users.end()) return false;//用户未登录
-    if (user_db.query(cur_username)[0].privilege <= user_db.query(new_username)[0].privilege
-        || strcmp(cur_username, new_username) != 0) return false;//权限不足或不是自己
+    if (strcmp(cur_username, new_username) != 0 &&
+        user_db.query(cur_username)[0].privilege <= user_db.query(new_username)[0].privilege)
+        return false;//权限不足，也不是自己
     if (new_privilege != -1 && new_privilege >= user_db.query(cur_username)[0].privilege) return false;
     return true;
 }
+
 //用户-c(<cur_username>) 修改 -u(<username>) 的用户信息。修改参数同注册参数，且均可以省略。
 void modify_profile(char cur_username[25], char new_username[25], char new_password[35] = "", char new_name[18] = "",
                     char new_mailAddr[35] = "", int new_privilege = -1) {
     user t = user_db.query(new_username)[0];
-    if (new_password != "") strcpy(t.password, new_password);
-
-    if (new_name != "") strcpy(t.name, new_name);
-    if (new_mailAddr != "") strcpy(t.mailAddr, new_mailAddr);
+    user _del = t;
+    if (new_password[0]!='\0')
+        strcpy(t.password, new_password);
+    if (new_name[0]!='\0')
+        strcpy(t.name, new_name);
+    if (new_mailAddr[0]!='\0')
+        strcpy(t.mailAddr, new_mailAddr);
     if (new_privilege != -1) t.privilege = new_privilege;
-
+    //接下来将t写回数据库
+    user_db.delete_(new_username, _del);
+    user_db.insert(new_username, t);
+    print_user(t);//t.username << ' ' << t.name << ' ' << t.mailAddr << ' ' << t.privilege << std::endl;
 }
 
 bool check_delete_train(char trainID[25]) {}
@@ -165,15 +180,21 @@ int main() {
                 else if (tokens[i] == "-m") strcpy(new_user.mailAddr, tokens[i + 1].c_str());
                 else if (tokens[i] == "-g") new_user.privilege = std::stoi(tokens[i + 1]);
             }
-            if (!check_add(cur_username, new_user.privilege)) {
+            if (user_db.empty()) {
+                new_user.privilege = 10;
+                add_user(new_user);
                 std::cout << "0" << std::endl;
+                continue;
+            }
+            if (!check_add(cur_username, new_user.privilege)) {
+                std::cout << "-1" << std::endl;
                 continue;
             }
             if (!add_user(new_user)) {
-                std::cout << "0" << std::endl;
+                std::cout << "-1" << std::endl;
                 continue;
             }
-            std::cout << "1" << std::endl;
+            std::cout << "0" << std::endl;
         } else if (tokens[1] == "login") {
             char cur_username[25], cur_password[35];
             for (int i = 2; i < tokens.size(); i += 2) {
@@ -181,20 +202,20 @@ int main() {
                 else if (tokens[i] == "-p") strcpy(cur_password, tokens[i + 1].c_str());
             }
             if (!login(cur_username, cur_password)) {
-                std::cout << "0" << std::endl;
+                std::cout << "-1" << std::endl;
                 continue;
             }
-            std::cout << "1" << std::endl;
+            std::cout << "0" << std::endl;
         } else if (tokens[1] == "logout") {
             char cur_username[25];
             for (int i = 2; i < tokens.size(); i += 2) {
-                if (tokens[i] == "-c") strcpy(cur_username, tokens[i + 1].c_str());
+                if (tokens[i] == "-u") strcpy(cur_username, tokens[i + 1].c_str());
             }
             if (!logout(cur_username)) {
-                std::cout << "0" << std::endl;
+                std::cout << "-1" << std::endl;
                 continue;
             }
-            std::cout << "1" << std::endl;
+            std::cout << "0" << std::endl;
         } else if (tokens[1] == "query_profile") {
             char cur_username[25], username[35];
             for (int i = 2; i < tokens.size(); i += 2) {
@@ -203,8 +224,8 @@ int main() {
             }
             query_profile(cur_username, username);
         } else if (tokens[1] == "modify_profile") {
-            char cur_username[25], new_username[25], new_password[35], new_name[18], new_mailAddr[35];
-            int new_privilege;
+            char cur_username[25] = "", new_username[25] = "", new_password[35] = "", new_name[18] = "", new_mailAddr[35] = "";
+            int new_privilege = -1;
             for (int i = 2; i < tokens.size(); i += 2) {
                 if (tokens[i] == "-c") strcpy(cur_username, tokens[i + 1].c_str());
                 else if (tokens[i] == "-u") strcpy(new_username, tokens[i + 1].c_str());

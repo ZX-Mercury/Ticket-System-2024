@@ -577,6 +577,9 @@ public:
         MR.write_info(root, 1);
         MR.end();
     };
+    bool empty(){
+        return root==-1;
+    }
 
     void insert(char index[65], T value) {  //将kv插入B+树
         Key_Value<T> kv(index, value);
@@ -594,7 +597,7 @@ public:
         }
     }
 
-    void delete_(char index[65], int value) {
+    void delete_(char index[65], T value) {
         if (root == -1) return;
         Key_Value<T> kv(index, value);
         node cursor;
