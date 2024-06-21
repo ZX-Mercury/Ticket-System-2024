@@ -311,5 +311,6 @@ int main() {
             std::cout << "bye" << std::endl;
             break;
         } else throw ("Invalid command");
+
     }
 }
