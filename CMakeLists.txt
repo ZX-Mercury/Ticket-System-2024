@@ -6,4 +6,4 @@ set(CMAKE_CXX_STANDARD 14)
 add_executable(Ticket_System_2024
         testcases/.gitignore
         testcases/README.txt
-        main.cpp)
+        code.cpp)
