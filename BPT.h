@@ -130,7 +130,6 @@ const int MAX = 104;//105
 const int MIN = MAX / 2;
 
 template<class T>
-
 struct Key_Value {
     char index[65];
     T value;
