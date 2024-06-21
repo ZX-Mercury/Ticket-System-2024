@@ -132,6 +132,7 @@ void modify_profile(char cur_username[25], char new_username[25], char new_passw
                     char new_mailAddr[35] = "", int new_privilege = -1) {
     user t = user_db.query(new_username)[0];
     if (new_password != "") strcpy(t.password, new_password);
+
     if (new_name != "") strcpy(t.name, new_name);
     if (new_mailAddr != "") strcpy(t.mailAddr, new_mailAddr);
     if (new_privilege != -1) t.privilege = new_privilege;
